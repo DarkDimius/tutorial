@@ -98,3 +98,89 @@ private[meta] trait Api {
 ```
 
 Let's translate this into English. It is possible to parse a `T` into a `U`, if: 1) a `T` is convertible to `Input` (a scala.meta abstraction that by default knows how to encapsulate strings, streams and files), 2) if there's a correct dialect in scope, 3) if `U` is something that can be parsed into. In our case, we parse a Stream that scala.meta already supports into a Source, which is a representation of top-level code that scala.meta also supports.
+
+### Exploring the parsed tree
+
+The simplest way of examining the tree that we have is prettyprinting its syntax (`.show[Syntax]` or simply `.toString`). If you already have experience with other metaprogramming frameworks in Scala, you will notice something unusual: the prettyprint contains formatting and comments - source elements that are typically thrown away.
+
+```scala
+println(tree.show[Syntax])
+```
+
+```
+00:14 ~/Projects/tutorial (view-bounds)$ sbt run
+[info] Set current project to tutorial (in build file:/Users/xeno_by/Projects/tutorial/)
+[info] Compiling 1 Scala source to /Users/xeno_by/Projects/tutorial/target/scala-2.11/classes...
+[info] Running Test
+package scala
+package math
+
+import java.util.Comparator
+import scala.language.{implicitConversions, higherKinds}
+
+// Skipping some code from scala/math/Ordering.scala
+
+trait LowPriorityOrderingImplicits {
+  /** This would conflict with all the nice implicit Orderings
+   *  available, but thanks to the magic of prioritized implicits
+   *  via subclassing we can make `Ordered[A] => Ordering[A]` only
+   *  turn up if nothing else works.  Since `Ordered[A]` extends
+   *  `Comparable[A]` anyway, we can throw in some Java interop too.
+   */
+  implicit def ordered[A <% Comparable[A]]: Ordering[A] = new Ordering[A] {
+    def compare(x: A, y: A): Int = x compareTo y
+  }
+}
+
+// Skipping some more code from scala/math/Ordering.scala
+```
+
+In scala.meta, trees that are created by parsing fully remember the sources that they are parsed from, storing the details about these sources in their `.tokens` collections. Note how tokens not only cover everything, but also feature offsets of beginning and end, providing precise positions to trees that encapsulate them.
+
+```scala
+println(tree.tokens)
+```
+
+```
+00:25 ~/Projects/tutorial (view-bounds)$ sbt run
+[info] Set current project to tutorial (in build file:/Users/xeno_by/Projects/tutorial/)
+[info] Compiling 1 Scala source to /Users/xeno_by/Projects/tutorial/target/scala-2.11/classes...
+[info] Running Test
+Slice(Tokenized(Input.Stream(<input stream>), Scala211, Vector(BOF (0..0), ...,
+// Skipping some code from scala/math/Ordering.scala (114..166), \n (166..167), \n (167..168),
+trait (168..173),   (173..174), LowPriorityOrderingImplicits (174..202), ...))
+```
+
+It is usually unnecessary to work at the level of tokens, because scala.meta trees are designed to express the overwhelming majority of language features simply via their structure. Let's see how view bounds are expressed in abstract syntax.
+
+```scala
+println(tree.show[Structure])
+```
+
+```
+00:32 ~/Projects/tutorial (view-bounds)$ sbt run
+[info] Set current project to tutorial (in build file:/Users/xeno_by/Projects/tutorial/)
+[info] Compiling 1 Scala source to /Users/xeno_by/Projects/tutorial/target/scala-2.11/classes...
+[info] Running Test
+Source(Seq(
+  Pkg(Term.Name("scala"),
+    Pkg(Term.Name("math"),
+      ...
+        Defn.Def(
+          Seq(Mod.Implicit()),
+          Term.Name("ordered"),
+          Seq(Type.Param(
+            Nil,
+            Type.Name("A"),
+            Nil,
+            Type.Bounds(None, None),
+            Seq(Type.Apply(Type.Name("Comparable"), Seq(Type.Name("A")))),
+            Nil)),
+          Nil,
+          Some(Type.Apply(Type.Name("Ordering"), Seq(Type.Name("A")))),
+          ...))))))
+```
+
+With `.show[Structure]`, it is possible to see that type parameters have a dedicated field that store view bounds, and this is something that we will be targetting in this guide. Data constructors referred by the printouts correspond to AST nodes defined in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala).
+
+However, if we take a closer look at Trees.scala, we'll notice that all the definitions of AST nodes live in the `scala.meta.internal.ast` package, which hints at the fact that there is a better way to manipulate trees. And sure there is - quasiquotes, as defined in [quasiquotes.md](/docs/quasiquotes.md). Knowing how to figure out and use internal structure of ASTs might come in handy in dire situations, but the main way of tree manipulations is using quasiquotes.
