@@ -47,7 +47,7 @@ In order to configure your build system to pick up scala.meta, you need just a s
 
 In our case, we need to do a purely syntactic rewriting, so the first line is going to suffice. Refer to other guides to see how to proceed with semantic APIs.
 
-Despite being one-liners, both scalameta and scalahost actually refer to a bunch of submodules, which means that if necessary you can be really fine-grained about the functionality that you want to include. In our case, it'd be enough to reference `libraryDependencies += "org.scalameta" %% "quasiquotes" % "..."`, but we'll proceed with `"scalameta"` for simplicity:
+Despite being one-liners, both scalameta and scalahost actually refer to a bunch of submodules, which means that if necessary you can be really fine-grained about the functionality that you want to include. In our case, it'd be enough to reference `libraryDependencies += "org.scalameta" %% "quasiquotes" % "..."`, but we'll proceed with `"scalameta"` for simplicity.
 
 ![Scala.meta modules](https://rawgit.com/scalameta/scalameta/master/docs/modules.svg)
 
