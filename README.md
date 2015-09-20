@@ -51,4 +51,21 @@ Despite being one-liners, both scalameta and scalahost actually refer to a bunch
 
 ![Scala.meta modules](https://rawgit.com/scalameta/scalameta/master/docs/modules.svg)
 
+### Setting up imports
 
+Since scala.meta APIs aren't living in a cake (looking at you, `scala.tools.nsc` and `scala.reflect`), setting up the environment is fairly simple and typically takes just two lines of code.
+
+1) As we've referenced `"scalameta"`, it's enough to just `import scala.meta._` to bring all the functionality into current scope. When referencing individual modules, the umbrella import is not available, and one has to import individual pieces of functionality separately (e.g. `import scala.meta.parsers._` or `import scala.meta.quasiquotes._`).
+
+2) In order to activate syntactic APIs, it's also necessary to select a dialect that will guide tokenization and parsing. Selection is performed by bringing a corresponding implicit value in scope. The list of available dialects is provided in [dialects/package.scala](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala#L43). For now, we pick `import scala.meta.dialects.Scala211`.
+
+```scala
+import scala.meta._
+import scala.meta.dialects.Scala211
+
+object Test {
+  def main(args: Array[String]): Unit = {
+    ???
+  }
+}
+```
