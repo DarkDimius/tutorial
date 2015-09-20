@@ -68,4 +68,33 @@ object Test {
     ???
   }
 }
+
+### Parsing the excerpt
+
+After the initial configuration is done, utilizing scala.meta APIs is fairly easy. For instance, parsing something is a one-liner, as long as the type of the something is understood by scala.meta:
+
+```scala
+import scala.meta._
+import scala.meta.dialects.Scala211
+
+object Test {
+  def main(args: Array[String]): Unit = {
+    val stream = getClass.getResourceAsStream("Ordering.scala")
+    val tree = stream.parse[Source]
+  }
+}
 ```
+
+`parse` showcases the power of implicits in enabling lightweight, configurable and modular APIs. Here's the code that defines this functionality in scala.meta:
+
+```scala
+private[meta] trait Api {
+  implicit class XtensionParseInputLike[T](inputLike: T) {
+    def parse[U](implicit convert: Convert[T, Input], dialect: Dialect, parse: Parse[U]): U = {
+      parse(convert(inputLike))
+    }
+  }
+}
+```
+
+Let's translate this into English. It is possible to parse a `T` into a `U`, if: 1) a `T` is convertible to `Input` (a scala.meta abstraction that by default knows how to encapsulate strings, streams and files), 2) if there's a correct dialect in scope, 3) if `U` is something that can be parsed into. In our case, we parse a Stream that scala.meta already supports into a Source, which is a representation of top-level code that scala.meta also supports.
