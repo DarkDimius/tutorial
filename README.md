@@ -39,4 +39,16 @@ trait LowPriorityOrderingImplicits {
 // Skipping some more code from scala/math/Ordering.scala
 ```
 
-[![Join the chat at https://gitter.im/scalameta/scalameta](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalameta/scalameta?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+### Configuring the build system
+
+In order to configure your build system to pick up scala.meta, you need just a single `libraryDependencies` line. The exact shape of the entry depends on the tasks that you're going to perform:
+  * Syntactic operations: `libraryDependencies += "org.scalameta" %% "scalameta" % "..."` (platform-independent data structures/APIs + platform-independent tokenizer and parser)
+  * Semantic operations: `libraryDependencies += "org.scalameta" %% "scalahost" % "..."` (the same as above + platform-dependent typechecker implemented on top of scalac)
+
+In our case, we need to do a purely syntactic rewriting, so the first line is going to suffice. Refer to other guides to see how to proceed with semantic APIs.
+
+Despite being one-liners, both scalameta and scalahost actually refer to a bunch of submodules, which means that if necessary you can be really fine-grained about the functionality that you want to include. In our case, it'd be enough to reference `libraryDependencies += "org.scalameta" %% "quasiquotes" % "..."`, but we'll proceed with `"scalameta"` for simplicity:
+
+![Scala.meta modules](https://rawgit.com/scalameta/scalameta/master/docs/modules.svg)
+
+
