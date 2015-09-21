@@ -184,3 +184,62 @@ Source(Seq(
 With `.show[Structure]`, it is possible to see that type parameters have a dedicated field that store view bounds, and this is something that we will be targetting in this guide. Data constructors referred by the printouts correspond to AST nodes defined in [Trees.scala](/scalameta/trees/src/main/scala/scala/meta/Trees.scala).
 
 However, if we take a closer look at Trees.scala, we'll notice that all the definitions of AST nodes live in the `scala.meta.internal.ast` package, which hints at the fact that there is a better way to manipulate trees. And sure there is - quasiquotes, as defined in [quasiquotes.md](/docs/quasiquotes.md). Knowing how to figure out and use internal structure of ASTs might come in handy in dire situations, but the main way of tree manipulations is using quasiquotes.
+
+### Rewriting the parsed tree
+
+In order to apply changes to the parsed tree, we can use the `Tree.transform` method of the collection-like UI to abstract syntax trees. In comparison with the traditional visitor approach, it features functional interface and requires minimal boilerplate. Note how we avoid the usual `object needToThinkOfSmartName extends Transformer { override def transform(tree: Tree): Tree = ... }` business.
+
+```scala
+import scala.meta._
+import scala.meta.dialects.Scala211
+
+object Test {
+  def main(args: Array[String]): Unit = {
+    val stream = getClass.getResourceAsStream("Ordering.scala")
+    val tree = stream.parse[Source]
+    val tree1 = tree.transform {
+      case m @ q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" =>
+        var evidences: List[Term.Param] = Nil
+        val tparams1 = tparams.map {
+          case tparam"..$mods $name[..$tparams] >: $lo <: $hi <% ..$vbounds : ..$cbounds" =>
+            val paramEvidences = vbounds.map(vbound => param"implicit ${Term.fresh("ev")}: $vbound")
+            evidences ++= paramEvidences
+            tparam"..$mods $name[..$tparams] >: $lo <: $hi : ..$cbounds"
+        }
+        val paramss1 = if (evidences.nonEmpty) paramss :+ evidences else paramss
+        q"..$mods def $name[..$tparams1](...$paramss1): $tpeopt = $expr"
+    }
+    println(tree1)
+  }
+}
+```
+
+Let's run this simple transformer to make sure that it indeed solves the problem at hand. Note how the printout of the transformed code retains original formatting. Achieving this with `scala.tools.nsc` and `scala.reflect` is currently prohibitively complex, because source-preserving rewritings in these frameworks can't be performed on the level of abstract syntax trees and must be done manually on the level of strings.
+
+```
+15:09 ~/Projects/tutorial (view-bounds)$ sbt run
+[info] Set current project to tutorial (in build file:/Users/xeno_by/Projects/tutorial/)
+[info] Compiling 1 Scala source to /Users/xeno_by/Projects/tutorial/target/scala-2.11/classes...
+[info] Running Test
+package scala
+package math
+
+import java.util.Comparator
+import scala.language.{implicitConversions, higherKinds}
+
+// Skipping some code from scala/math/Ordering.scala
+
+trait LowPriorityOrderingImplicits {
+  /** This would conflict with all the nice implicit Orderings
+   *  available, but thanks to the magic of prioritized implicits
+   *  via subclassing we can make `Ordered[A] => Ordering[A]` only
+   *  turn up if nothing else works.  Since `Ordered[A]` extends
+   *  `Comparable[A]` anyway, we can throw in some Java interop too.
+   */
+  implicit def ordered[A](implicit ev1: Comparable[A]): Ordering[A] = new Ordering[A] {
+    def compare(x: A, y: A): Int = x compareTo y
+  }
+}
+
+// Skipping some more code from scala/math/Ordering.scala
+```
