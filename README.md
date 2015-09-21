@@ -24,6 +24,7 @@
   
 ### Potential risks
   * This is pre-release software
+  * Layout inference needs work ([#164](https://github.com/scalameta/scalameta/issues/164))
   * Semantic APIs is far from completion ([#148](https://github.com/scalameta/scalameta/issues/148))
   * Performance could use some improvements ([#149](https://github.com/scalameta/scalameta/issues/149#issuecomment-110476298) and [#152](https://github.com/scalameta/scalameta/issues/152))
   * All that and then some more is planned to be [addressed in 0.1](https://github.com/scalameta/scalameta/milestones/0.1)
