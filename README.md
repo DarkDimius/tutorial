@@ -17,7 +17,7 @@
     * Then scala.meta is what you need!
   * :x: Macro writers
     * No macro support for 0.1
-    * However, both def macros and macro annotations are tentatively planned for 1.0
+    * However, both def macros and macro annotations are<br/>tentatively planned for 1.0
 
 <br/>
 <br/>
