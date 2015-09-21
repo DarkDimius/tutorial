@@ -23,3 +23,9 @@ In many metaprogramming frameworks, full semantic information about the program 
 One of the key innovations of scala.meta is introduction of AST persistence that mandates saving typechecked abstract syntax trees into binaries produced by the compiler. Our working group at LAMP has produced a specification of [the TASTY format](https://docs.google.com/document/d/1Wp86JKpRxyWTqUU39H40ZdXOlacTNs20aTj7anZLQDw/edit#heading=h.foemem8hq66y), a binary representation for typed Scala ASTs. Our scalac plugin saves scala.meta trees in TASTY format and provides ways to load scala.meta trees back from binaries produced by TASTY-compliant Scala compilers.
 
 With the introduction of TASTY, the restrictions on program introspection are completely lifted, and the distinction between compile-time and runtime metaprogramming becomes obsolete. In this tutorial, we will illustrate this thesis in practice.
+
+### Configuring the build system
+
+We will be using a two-project configuration that consists of `scrutinee`, a project under inspection, and `explorer`, a scala.meta-based tool that loads semantic information from TASTY.
+
+To enable AST persistence, it is necessary to reference the `"org.scalameta" %% "scalahost" % "..."` compiler plugin. To read TASTY into scala.meta trees, it is necessary to reference that compiler plugin as a library in order to gain access to a TASTY-based semantic context.
