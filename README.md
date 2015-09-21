@@ -30,5 +30,4 @@
   * All that and then some more is planned to be [addressed in 0.1](https://github.com/scalameta/scalameta/milestones/0.1)
 
 ### Practical guides
-  * To be implemented
-
+  * Rewriting deprecated view bounds ([/tree/view-bounds](https://github.com/scalameta/tutorial/tree/6dc51fc68e9ad235a0ea2215bbc725695b65a9e9))
