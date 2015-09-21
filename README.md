@@ -29,3 +29,7 @@ With the introduction of TASTY, the restrictions on program introspection are co
 We will be using a two-project configuration that consists of `scrutinee`, a project under inspection, and `explorer`, a scala.meta-based tool that loads semantic information from TASTY.
 
 To enable AST persistence, it is necessary to reference the `"org.scalameta" %% "scalahost" % "..."` compiler plugin. To read TASTY into scala.meta trees, it is necessary to reference that compiler plugin as a library in order to gain access to a TASTY-based semantic context.
+
+### To be continued
+
+I need to fix some compiler crashes in order to finish the guide. Will do that a bit later, stay tuned!
