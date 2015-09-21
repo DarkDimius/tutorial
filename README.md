@@ -54,3 +54,9 @@
 ### Practical guides
   * Rewriting deprecated view bounds ([/tree/view-bounds](https://github.com/scalameta/tutorial/tree/6dc51fc68e9ad235a0ea2215bbc725695b65a9e9))
   * Exploring semantics ([/tree/exploring-semantics](https://github.com/scalameta/tutorial/tree/44c662532f1528e76dfcf0adc68f307e6e051947))
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
