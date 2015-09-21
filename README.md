@@ -247,3 +247,35 @@ trait LowPriorityOrderingImplicits {
 When doing code transformations, one should always think about hygiene, which entails two things: 1) making sure that synthetic references don't get captured by user-defined definitions (referential transparency), 2) making sure that synthetic definitions don't capture user-defined references (hygiene proper).
 
 This tutorial is intentionally simplistic in the regard of hygiene, because the problem lends itself well to relaxed code generation. First of all, we don't have to worry about `=>` being unexpectedly captured by user definitions, because `=>` is a keyword, not a name. Secondly, avoiding violations of hygiene proper is easily achieved by a low-tech gensym-style solution (`Term.fresh`). Generating both unique and user-readable names (not `ev$1`, but something more along the lines of `ev`) is a completely different story and is left for future work.
+
+### Going further
+
+Even though `Tree.transform` feels simple, there is hidden depth behind it. In fact, collection-like APIs like `Tree.transform` and `Tree.collect` are just particular cases of the general tree query language (TQL) designed and implemented by [@begeric](https://github.com/begeric). In TQL, tree traversals not only transform trees, but also accumulate monoidal state. Let's make use of this by importing `scala.meta.tql._` and utilizing the `withResult` helper method.
+
+```scala
+import scala.meta._
+import scala.meta.dialects.Scala211
+import scala.meta.tql._
+
+object Test {
+  def main(args: Array[String]): Unit = {
+    val stream = getClass.getResourceAsStream("Ordering.scala")
+    val tree = stream.parse[Source]
+    val tree1 = tree.transform {
+      case m @ q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" =>
+        val (tparams1, evidences) = tparams.transform {
+          case tparam"..$mods $name[..$tparams] >: $lo <: $hi <% ..$vbounds : ..$cbounds" =>
+            val evidences = vbounds.map(vbound => param"implicit ${Term.fresh("ev")}: $vbound").toList
+            tparam"..$mods $name[..$tparams] >: $lo <: $hi : ..$cbounds" withResult evidences
+        }
+        val paramss1 = if (evidences.nonEmpty) paramss :+ evidences else paramss
+        q"..$mods def $name[..$tparams1](...$paramss1): $tpeopt = $expr"
+    }
+    println(tree1)
+  }
+}
+```
+
+Thanks to TQL, we've been able to get rid of the pesky mutable state and make our transformer more declarative. If you're interested in learning more about TQL, you can find some docs at [begeric/TQL-scalameta](https://github.com/begeric/TQL-scalameta/wiki) as well as the accompanying technical report at [infoscience.epfl.ch](http://infoscience.epfl.ch/record/204789).
+
+
