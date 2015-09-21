@@ -243,3 +243,7 @@ trait LowPriorityOrderingImplicits {
 
 // Skipping some more code from scala/math/Ordering.scala
 ```
+
+When doing code transformations, one should always think about hygiene, which entails two things: 1) making sure that synthetic references don't get captured by user-defined definitions (referential transparency), 2) making sure that synthetic definitions don't capture user-defined references (hygiene proper).
+
+This tutorial is intentionally simplistic in the regard of hygiene, because the problem lends itself well to relaxed code generation. First of all, we don't have to worry about `=>` being unexpectedly captured by user definitions, because `=>` is a keyword, not a name. Secondly, avoiding violations of hygiene proper is easily achieved by a low-tech gensym-style solution (`Term.fresh`). Generating both unique and user-readable names (not `ev$1`, but something more along the lines of `ev`) is a completely different story and is left for future work.
